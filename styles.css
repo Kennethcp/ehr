@@ -54,6 +54,20 @@ th, td {
     text-align: left;
 }
 
+.delete-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+.delete-button i {
+    margin-right: 5px;
+}
+.delete-button:hover {
+    background-color: darkred;
+}
 /* Media queries for responsiveness */
 @media (max-width: 600px) {
     form {

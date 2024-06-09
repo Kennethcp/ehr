@@ -6,6 +6,7 @@
     <title>EHR System</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/pouchdb/dist/pouchdb.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <h1>Electronic Health Records</h1>
@@ -33,6 +34,7 @@
                 <th>Medicine</th>
                 <th>Illness</th>
                 <th>Date</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -78,6 +80,7 @@
                         <td data-label="Medicine">${doc.medicine}</td>
                         <td data-label="Illness">${doc.illness}</td>
                         <td data-label="Date">${timestamp}</td>
+                        <td data-label="Action"><button class="delete-button" onclick="deletePatient('${doc._id}', '${doc._rev}')"><i class="fas fa-trash-alt"></i>Delete</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -110,6 +113,22 @@
             document.getElementById('medicine').value = '';
             document.getElementById('illness').value = '';
         });
+
+        // Delete patient from the database
+        async function deletePatient(id, rev) {
+            const uniqueCode = prompt('Enter the unique code to delete this record:');
+            if (uniqueCode === 'hapus') { // Replace 'your-unique-code' with the actual code you want to use
+                try {
+                    const response = await localDB.remove(id, rev);
+                    console.log('Document deleted:', response);
+                    fetchPatients();
+                } catch (error) {
+                    console.error('Error deleting document:', error);
+                }
+            } else {
+                alert('Incorrect code. Deletion cancelled.');
+            }
+        }
 
         // Initial fetch
         fetchPatients();
