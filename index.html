@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EHR System</title>
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb/dist/pouchdb.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Electronic Health Records</h1>
+    <form id="patient-form">
+        <input type="text" id="name" placeholder="Patient Name" required>
+        <input type="number" id="age" placeholder="Patient Age" required>
+        <select id="sex" required>
+            <option value="" disabled selected>Sex</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+        <input type="text" id="doctor" placeholder="Doctor Name" required>
+        <input type="text" id="medicine" placeholder="Medicine Given" required>
+        <input type="text" id="illness" placeholder="Illness" required>
+        <button type="submit">Add Patient</button>
+    </form>
+    <table id="patient-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Sex</th>
+                <th>Doctor</th>
+                <th>Medicine</th>
+                <th>Illness</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Patient records will be appended here -->
+        </tbody>
+    </table>
+
+    <script>
+        const localDB = new PouchDB('ehr');
+        const remoteDB = new PouchDB('http://admin:1234567890@192.168.100.221:5984/ehr'); // Replace with your server's IP address and credentials
+
+        // Sync local and remote databases
+        localDB.sync(remoteDB, {
+            live: true,
+            retry: true
+        }).on('change', function (info) {
+            console.log('Data changed:', info);
+            fetchPatients(); // Fetch data whenever there is a change
+        }).on('paused', function (err) {
+            console.log('Replication paused:', err);
+        }).on('active', function () {
+            console.log('Replication resumed');
+        }).on('error', function (err) {
+            console.error('Replication error:', err);
+        });
+
+        // Function to fetch and display patients
+        function fetchPatients() {
+            localDB.allDocs({ include_docs: true, descending: true }, function (err, doc) {
+                if (err) {
+                    return console.error('Error fetching patients:', err);
+                }
+                console.log('Fetched patients:', doc);
+                const tbody = document.querySelector('#patient-table tbody');
+                tbody.innerHTML = '';
+                doc.rows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    const timestamp = new Date(row.doc.timestamp).toLocaleString();
+                    tr.innerHTML = `
+                        <td>${row.doc.name}</td>
+                        <td>${row.doc.age}</td>
+                        <td>${row.doc.sex}</td>
+                        <td>${row.doc.doctor}</td>
+                        <td>${row.doc.medicine}</td>
+                        <td>${row.doc.illness}</td>
+                        <td>${timestamp}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        // Add patient to the database
+        document.getElementById('patient-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const sex = document.getElementById('sex').value;
+            const doctor = document.getElementById('doctor').value;
+            const medicine = document.getElementById('medicine').value;
+            const illness = document.getElementById('illness').value;
+            const timestamp = new Date().toISOString();
+            localDB.post({ name, age, sex, doctor, medicine, illness, timestamp }).then((response) => {
+                console.log('Document added:', response);
+                fetchPatients();
+            }).catch((error) => {
+                console.error('Error adding document:', error);
+            });
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('sex').value = '';
+            document.getElementById('doctor').value = '';
+            document.getElementById('medicine').value = '';
+            document.getElementById('illness').value = '';
+        });
+
+        // Initial fetch
+        fetchPatients();
+    </script>
+</body>
+</html>
