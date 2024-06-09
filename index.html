@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EHR System</title>
-    <script src="https://cdn.jsdelivr.net/npm/pouchdb/dist/pouchdb.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb/dist/pouchdb.js"></script>
 </head>
 <body>
     <h1>Electronic Health Records</h1>
@@ -72,13 +72,13 @@
                     const tr = document.createElement('tr');
                     const timestamp = new Date(row.doc.timestamp).toLocaleString();
                     tr.innerHTML = `
-                        <td>${row.doc.name}</td>
-                        <td>${row.doc.age}</td>
-                        <td>${row.doc.sex}</td>
-                        <td>${row.doc.doctor}</td>
-                        <td>${row.doc.medicine}</td>
-                        <td>${row.doc.illness}</td>
-                        <td>${timestamp}</td>
+                        <td data-label="Name">${row.doc.name}</td>
+                        <td data-label="Age">${row.doc.age}</td>
+                        <td data-label="Sex">${row.doc.sex}</td>
+                        <td data-label="Doctor">${row.doc.doctor}</td>
+                        <td data-label="Medicine">${row.doc.medicine}</td>
+                        <td data-label="Illness">${row.doc.illness}</td>
+                        <td data-label="Date">${timestamp}</td>
                     `;
                     tbody.appendChild(tr);
                 });
