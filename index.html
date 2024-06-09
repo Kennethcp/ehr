@@ -60,33 +60,34 @@
         });
 
         // Function to fetch and display patients
-        function fetchPatients() {
-            localDB.allDocs({ include_docs: true, descending: true }, function (err, doc) {
-                if (err) {
-                    return console.error('Error fetching patients:', err);
-                }
-                console.log('Fetched patients:', doc);
+        async function fetchPatients() {
+            try {
+                const result = await localDB.allDocs({ include_docs: true });
+                console.log('Fetched patients:', result);
+                const sortedDocs = result.rows.map(row => row.doc).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 const tbody = document.querySelector('#patient-table tbody');
                 tbody.innerHTML = '';
-                doc.rows.forEach(row => {
+                sortedDocs.forEach(doc => {
                     const tr = document.createElement('tr');
-                    const timestamp = new Date(row.doc.timestamp).toLocaleString();
+                    const timestamp = new Date(doc.timestamp).toLocaleString();
                     tr.innerHTML = `
-                        <td data-label="Name">${row.doc.name}</td>
-                        <td data-label="Age">${row.doc.age}</td>
-                        <td data-label="Sex">${row.doc.sex}</td>
-                        <td data-label="Doctor">${row.doc.doctor}</td>
-                        <td data-label="Medicine">${row.doc.medicine}</td>
-                        <td data-label="Illness">${row.doc.illness}</td>
+                        <td data-label="Name">${doc.name}</td>
+                        <td data-label="Age">${doc.age}</td>
+                        <td data-label="Sex">${doc.sex}</td>
+                        <td data-label="Doctor">${doc.doctor}</td>
+                        <td data-label="Medicine">${doc.medicine}</td>
+                        <td data-label="Illness">${doc.illness}</td>
                         <td data-label="Date">${timestamp}</td>
                     `;
                     tbody.appendChild(tr);
                 });
-            });
+            } catch (err) {
+                console.error('Error fetching patients:', err);
+            }
         }
 
         // Add patient to the database
-        document.getElementById('patient-form').addEventListener('submit', function (event) {
+        document.getElementById('patient-form').addEventListener('submit', async function (event) {
             event.preventDefault();
             const name = document.getElementById('name').value;
             const age = document.getElementById('age').value;
@@ -95,12 +96,13 @@
             const medicine = document.getElementById('medicine').value;
             const illness = document.getElementById('illness').value;
             const timestamp = new Date().toISOString();
-            localDB.post({ name, age, sex, doctor, medicine, illness, timestamp }).then((response) => {
+            try {
+                const response = await localDB.post({ name, age, sex, doctor, medicine, illness, timestamp });
                 console.log('Document added:', response);
                 fetchPatients();
-            }).catch((error) => {
+            } catch (error) {
                 console.error('Error adding document:', error);
-            });
+            }
             document.getElementById('name').value = '';
             document.getElementById('age').value = '';
             document.getElementById('sex').value = '';
