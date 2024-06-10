@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EHR System</title>
+    <link rel="stylesheet" href="patient.css" />
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb/dist/pouchdb.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="form-container">
+        <h1>Patient Data</h1>
+        <form id="patient-form">
+          <input type="text" id="name" placeholder="Patient Name" required />
+          <input type="number" id="age" placeholder="Patient Age" required />
+          <input type="text" id="nik" placeholder="NIK" required />
+          <input type="text" id="address" placeholder="Address" required />
+          <input
+            type="text"
+            id="birthplace"
+            placeholder="Place of Birth"
+            required
+          />
+          <input
+            type="date"
+            id="birthdate"
+            placeholder="Date of Birth"
+            required
+          />
+          <div class="bpjs-container">
+            <label for="bpjs" class="bpjs-label">BPJS</label>
+            <input type="checkbox" id="bpjs" />
+          </div>
+          <input
+            type="text"
+            id="healthcareRegion"
+            placeholder="Healthcare Facility Region"
+            required
+          />
+          <select id="sex" required>
+            <option value="" disabled selected>Sex</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+          <button type="submit">Add Patient</button>
+        </form>
+      </div>
+      <div class="table-container">
+        <div class="search-container">
+          <input type="text" id="search-name" placeholder="Search by Name" />
+          <input type="text" id="search-nik" placeholder="Search by NIK" />
+        </div>
+        <table id="patient-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Age</th>
+              <th>NIK</th>
+              <th>Address</th>
+              <th>Place of Birth</th>
+              <th>Date of Birth</th>
+              <th>BPJS</th>
+              <th>Healthcare Region</th>
+              <th>Sex</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Patient records will be appended here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb/dist/pouchdb.js"></script>
+    <script>
+        const localDB = new PouchDB('ehr');
+        const remoteDB = new PouchDB('http://admin:1234567890@192.168.100.15:5984/ehr'); // Replace with your server's IP address and credentials
+
+        // Sync local and remote databases
+        localDB.sync(remoteDB, {
+            live: true,
+            retry: true
+        }).on('change', function (info) {
+            console.log('Data changed:', info);
+            fetchPatients(); // Fetch data whenever there is a change
+        }).on('paused', function (err) {
+            console.log('Replication paused:', err);
+        }).on('active', function () {
+            console.log('Replication resumed');
+        }).on('error', function (err) {
+            console.error('Replication error:', err);
+        });
+
+        // Function to fetch and display patients
+        async function fetchPatients() {
+            try {
+                const result = await localDB.allDocs({ include_docs: true });
+                console.log('Fetched patients:', result);
+                const sortedDocs = result.rows.map(row => row.doc).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                const tbody = document.querySelector('#patient-table tbody');
+                tbody.innerHTML = '';
+                const searchName = document.getElementById('search-name').value.toLowerCase();
+                const searchNik = document.getElementById('search-nik').value.toLowerCase();
+                sortedDocs
+                    .filter(doc => doc.name.toLowerCase().includes(searchName) && doc.nik.toLowerCase().includes(searchNik))
+                    .forEach(doc => {
+                        const tr = document.createElement('tr');
+                        const timestamp = new Date(doc.timestamp).toLocaleString();
+                        tr.innerHTML = `
+                            <td data-label="Name">${doc.name}</td>
+                            <td data-label="Age">${doc.age}</td>
+                            <td data-label="NIK">${doc.nik}</td>
+                            <td data-label="Address">${doc.address}</td>
+                            <td data-label="Place of Birth">${doc.birthplace}</td>
+                            <td data-label="Date of Birth">${doc.birthdate}</td>
+                            <td data-label="BPJS">${doc.bpjs ? 'Yes' : 'No'}</td>
+                            <td data-label="Healthcare Region">${doc.healthcareRegion}</td>
+                            <td data-label="Sex">${doc.sex}</td>
+                            <td data-label="Date">${timestamp}</td>
+                            <td data-label="Action"><button class="delete-button" onclick="deletePatient('${doc._id}', '${doc._rev}')"><i class="fas fa-trash-alt"></i>Delete</button></td>
+                            <td data-label="Action"><button class="view-button" onclick="viewPatient('${doc.nik}')"><i class="fas fa-eye"></i> View</button></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+            } catch (err) {
+                console.error('Error fetching patients:', err);
+            }
+        }
+
+        // Add patient to the database
+        document.getElementById('patient-form').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const nik = document.getElementById('nik').value;
+            const address = document.getElementById('address').value;
+            const birthplace = document.getElementById('birthplace').value;
+            const birthdate = document.getElementById('birthdate').value;
+            const bpjs = document.getElementById('bpjs').checked;
+            const healthcareRegion = document.getElementById('healthcareRegion').value;
+            const sex = document.getElementById('sex').value;
+            const timestamp = new Date().toISOString();
+            try {
+                const response = await localDB.post({ name, age, nik, address, birthplace, birthdate, bpjs, healthcareRegion, sex, timestamp });
+                console.log('Document added:', response);
+                fetchPatients();
+            } catch (error) {
+                console.error('Error adding document:', error);
+            }
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('nik').value = '';
+            document.getElementById('address').value = '';
+            document.getElementById('birthplace').value = '';
+            document.getElementById('birthdate').value = '';
+            document.getElementById('bpjs').checked = false;
+            document.getElementById('healthcareRegion').value = '';
+            document.getElementById('sex').value = '';
+        });
+
+        // Delete patient from the database
+        async function deletePatient(id, rev) {
+            const uniqueCode = prompt('Enter the unique code to delete this record:');
+            if (uniqueCode === 'hapus') { // Replace 'your-unique-code' with the actual code you want to use
+                try {
+                    const response = await localDB.remove(id, rev);
+                    console.log('Document deleted:', response);
+                    fetchPatients();
+                } catch (error) {
+                    console.error('Error deleting document:', error);
+                }
+            } else {
+                alert('Incorrect code. Deletion cancelled.');
+            }
+        }
+        function viewPatient(nik) {
+            window.location.href = `usersPage.html?nik=${nik}`;
+        }
+
+        // Listen for search input changes
+        document.getElementById('search-name').addEventListener('input', fetchPatients);
+        document.getElementById('search-nik').addEventListener('input', fetchPatients);
+
+        // Initial fetch
+        fetchPatients();
+    </script>
+  </body>
+</html>
