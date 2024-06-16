@@ -37,7 +37,7 @@ WWW-Authenticate = Basic realm="administrator"
 ;example.com = /database/
 
 [admins]
-admin = 1234567890 (your CouchDB password)
+admin = (your CouchDB password)
 
 [cors]
 credentials = true
