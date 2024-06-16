@@ -50,7 +50,7 @@
     <script>
       const localDB = new PouchDB("ehr");
       const remoteDB = new PouchDB(
-        "http://admin:1234567890@192.168.100.15:5984/ehr"
+        "http://admin:PASSWORD@IPADDRESS:5984/ehr"
       ); // Replace with your server's IP address and credentials
 
       // Sync local and remote databases
