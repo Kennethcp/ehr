@@ -54,9 +54,11 @@ origins = *
 headers = accept, authorization, content-type, origin, referer
 methods = GET, PUT, POST, HEAD, DELETE
 ```
-## 3. Update Your Password
-Replace (your CouchDB password) in the [admins] section with your actual CouchDB password.
-Replace the password into your CouchDB password in the index.html
+Don't forget to replace (your CouchDB password) in the [admins] sections with your actual CouchDB password.
+
+## 3. Update Your index.html
+Replace the PASSWORD into your CouchDB password
+Replace IPADDRESS into your IP Address. You can check it by running ipconfig in cmd (if in windows)
 
 ## 4. Run The Code
 Start a simple HTTP server to run your CouchDB setup. Use the following command:
