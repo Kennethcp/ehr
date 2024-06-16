@@ -48,5 +48,5 @@ methods = GET, PUT, POST, HEAD, DELETE
 ```
 ## 3. Change the password in index into your CouchDB password
 ## 4. Run the code
-`python -m http.server 8000`
+``python -m http.server 8000``
 
