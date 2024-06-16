@@ -1,7 +1,16 @@
 # How To Run
-## 1. Download CouchDB From CouchDB Website
-## 2. Setup local.ini File
-``` 
+
+This guide provides step-by-step instructions for downloading and setting up CouchDB. Follow these instructions to get your CouchDB server up and running.
+
+## 1. Download CouchDB
+
+First, download CouchDB from the [CouchDB Website](https://couchdb.apache.org/).
+
+## 2. Setup `local.ini` File
+
+Edit the `local.ini` file with the following configuration:
+
+```ini
 [couchdb]
 ;max_document_size = 4294967296 ; bytes
 ;os_process_timeout = 5000
@@ -44,9 +53,16 @@ credentials = true
 origins = *
 headers = accept, authorization, content-type, origin, referer
 methods = GET, PUT, POST, HEAD, DELETE
-
 ```
-## 3. Change the password in index into your CouchDB password
-## 4. Run the code
-``python -m http.server 8000``
+## 3. Update Your Password
+Replace (your CouchDB password) in the [admins] section with your actual CouchDB password.
+Replace the password into your CouchDB password in the index.html
 
+## 4. Run The Code
+Start a simple HTTP server to run your CouchDB setup. Use the following command:
+```
+python -m http.server 8000
+```
+
+## 5. Open the page
+Search localhost:8000/index.html in your browser
